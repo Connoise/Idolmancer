@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harmonic Transition Engine — prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..600&family=Hanken+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b0807;
+    --panel:#13100e;
+    --panel2:#1a1512;
+    --line:#2b2320;
+    --amber:#e0913a;
+    --amber-dim:#9c6526;
+    --oxblood:#9e2a2b;
+    --bone:#efe6d8;
+    --bone-dim:#a89c8b;
+    --green:#7fa66b;
+    --violet:#9a7bb0;
+    --mono:'Space Mono', monospace;
+    --disp:'Fraunces', serif;
+    --body:'Hanken Grotesk', sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:
+    radial-gradient(120% 90% at 80% -10%, #1d1411 0%, transparent 55%),
+    radial-gradient(100% 80% at 0% 110%, #14100f 0%, transparent 50%),
+    var(--ink);
+    color:var(--bone);font-family:var(--body);min-height:100vh;
+    background-attachment:fixed;}
+  body{ background-image:
+    radial-gradient(120% 90% at 80% -10%, #1d1411 0%, transparent 55%),
+    radial-gradient(100% 80% at 0% 110%, #14100f 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:38px 24px 90px;}
+  header{display:flex;align-items:flex-end;justify-content:space-between;
+    border-bottom:1px solid var(--line);padding-bottom:18px;margin-bottom:6px;gap:20px;flex-wrap:wrap;}
+  h1{font-family:var(--disp);font-weight:340;font-size:clamp(28px,4.4vw,46px);
+    line-height:0.98;letter-spacing:-0.015em;}
+  h1 em{font-style:italic;color:var(--amber);}
+  .sub{font-family:var(--mono);font-size:11px;letter-spacing:0.16em;text-transform:uppercase;
+    color:var(--bone-dim);text-align:right;line-height:1.7;}
+  .lede{font-family:var(--disp);font-style:italic;font-weight:300;font-size:18px;color:var(--bone-dim);
+    max-width:760px;margin:22px 0 30px;line-height:1.5;}
+  .grid{display:grid;grid-template-columns:1.05fr 1fr;gap:18px;align-items:start;}
+  @media(max-width:880px){.grid{grid-template-columns:1fr;}}
+  .card{background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);
+    border:1px solid var(--line);border-radius:3px;padding:22px;position:relative;}
+  .card::before,.card::after{content:'';position:absolute;width:9px;height:9px;border-color:var(--amber-dim);}
+  .card::before{top:-1px;left:-1px;border-top:1px solid;border-left:1px solid;}
+  .card::after{bottom:-1px;right:-1px;border-bottom:1px solid;border-right:1px solid;}
+  .ctitle{font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;
+    color:var(--amber);margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+  .ctitle::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent);}
+  .state-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px;}
+  label{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:0.18em;
+    text-transform:uppercase;color:var(--bone-dim);margin:0 0 6px 2px;}
+  select,input[type=text]{width:100%;background:var(--ink);color:var(--bone);
+    border:1px solid var(--line);border-radius:2px;padding:10px 11px;font-family:var(--mono);
+    font-size:14px;letter-spacing:0.02em;outline:none;transition:border-color .15s,box-shadow .15s;}
+  select:focus,input[type=text]:focus{border-color:var(--amber-dim);
+    box-shadow:0 0 0 2px rgba(224,145,58,0.12);}
+  .arrow{display:flex;align-items:center;justify-content:center;font-family:var(--disp);
+    font-style:italic;color:var(--amber);font-size:22px;padding:6px 0 14px;letter-spacing:0.1em;}
+  .field{margin-bottom:16px;}
+  .hint{font-size:12px;color:var(--bone-dim);margin-top:7px;line-height:1.45;font-family:var(--body);}
+  .weights .wr{margin-bottom:17px;}
+  .wr .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px;}
+  .wr .top .nm{font-family:var(--body);font-weight:600;font-size:13.5px;letter-spacing:0.01em;}
+  .wr .top .vl{font-family:var(--mono);font-size:12px;color:var(--amber);}
+  .wr .desc{font-size:11.5px;color:var(--bone-dim);margin-bottom:8px;line-height:1.4;}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;
+    background:var(--line);border-radius:3px;outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;
+    border-radius:50%;background:var(--amber);cursor:pointer;border:2px solid var(--ink);
+    box-shadow:0 0 0 1px var(--amber-dim);}
+  input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--amber);
+    cursor:pointer;border:2px solid var(--ink);}
+  .rel{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;}
+  .rel .item{border-left:2px solid var(--line);padding-left:11px;}
+  .rel .k{font-family:var(--mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--bone-dim);}
+  .rel .v{font-family:var(--mono);font-size:14px;color:var(--bone);margin-top:3px;}
+  .rel .v.good{color:var(--green);} .rel .v.warn{color:var(--amber);}
+  .results-head{display:flex;align-items:baseline;justify-content:space-between;
+    margin:42px 0 4px;border-bottom:1px solid var(--line);padding-bottom:14px;}
+  .results-head h2{font-family:var(--disp);font-weight:340;font-size:26px;letter-spacing:-0.01em;}
+  .results-head .meta{font-family:var(--mono);font-size:10px;letter-spacing:0.16em;
+    text-transform:uppercase;color:var(--bone-dim);}
+  .result{background:linear-gradient(180deg,var(--panel) 0%,var(--panel2) 100%);
+    border:1px solid var(--line);border-radius:3px;padding:20px 22px;margin-top:14px;
+    position:relative;overflow:hidden;transition:border-color .2s,transform .2s;}
+  .result:hover{border-color:var(--amber-dim);}
+  .result .rank{position:absolute;top:14px;right:18px;font-family:var(--disp);font-style:italic;
+    font-size:34px;color:var(--line);font-weight:400;}
+  .result.top{border-color:var(--amber-dim);}
+  .result.top .rank{color:var(--amber-dim);}
+  .r-name{font-family:var(--body);font-weight:700;font-size:16px;letter-spacing:0.01em;margin-bottom:3px;}
+  .r-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:0.15em;text-transform:uppercase;
+    padding:2px 7px;border:1px solid var(--line);border-radius:99px;color:var(--bone-dim);margin-left:9px;
+    vertical-align:middle;}
+  .chain{display:flex;align-items:flex-end;gap:7px;flex-wrap:wrap;margin:14px 0 6px;}
+  .step{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .step .melnote{font-family:var(--mono);font-size:11px;color:var(--oxblood);height:15px;
+    letter-spacing:0.04em;}
+  .step .melnote b{color:#d6634f;}
+  .step .ch{background:var(--ink);border:1px solid var(--line);border-radius:2px;
+    padding:7px 12px;color:var(--amber);font-family:var(--mono);font-size:16px;white-space:nowrap;}
+  .step .rn{font-family:var(--mono);color:var(--bone-dim);font-size:11px;letter-spacing:0.02em;}
+  .step.src .ch{color:var(--bone-dim);border-style:dashed;opacity:0.8;}
+  .step.conn .ch{border-color:var(--amber);color:var(--amber);
+    box-shadow:0 0 0 1px var(--amber-dim),0 0 14px rgba(224,145,58,0.18);}
+  .step.conn .rn{color:var(--amber-dim);}
+  .step.tonic .ch{border-color:var(--green);color:var(--green);}
+  .step.tonic .rn{color:var(--green);}
+  .arrowm{font-family:var(--disp);font-style:italic;color:var(--amber-dim);font-size:15px;
+    padding-bottom:9px;}
+  .conn-label{font-family:var(--mono);font-size:8px;letter-spacing:0.16em;text-transform:uppercase;
+    color:var(--amber-dim);position:absolute;top:-13px;left:50%;transform:translateX(-50%);white-space:nowrap;}
+  .why{font-size:13.5px;color:var(--bone-dim);line-height:1.55;margin:11px 0 6px;max-width:640px;}
+  .why b{color:var(--bone);font-weight:600;}
+  .spell{font-size:12px;color:var(--violet);font-family:var(--body);font-style:italic;
+    line-height:1.5;margin-top:8px;padding-left:12px;border-left:2px solid rgba(154,123,176,0.35);max-width:620px;}
+  .bars{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px;max-width:560px;}
+  .bar .bl{font-family:var(--mono);font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;
+    color:var(--bone-dim);display:flex;justify-content:space-between;margin-bottom:5px;}
+  .bar .bl span{color:var(--bone);}
+  .bar .track{height:4px;background:var(--line);border-radius:3px;overflow:hidden;}
+  .bar .fill{height:100%;border-radius:3px;transition:width .35s ease;}
+  .f-smooth{background:var(--green);} .f-direct{background:var(--amber);}
+  .f-mod{background:var(--violet);} .f-mel{background:var(--oxblood);}
+  .score-pill{position:absolute;bottom:18px;right:20px;font-family:var(--mono);text-align:right;}
+  .score-pill .num{font-size:24px;color:var(--amber);font-weight:700;}
+  .score-pill .lbl{font-size:8px;letter-spacing:0.18em;color:var(--bone-dim);text-transform:uppercase;}
+  footer{margin-top:54px;border-top:1px solid var(--line);padding-top:22px;
+    font-size:12.5px;color:var(--bone-dim);line-height:1.6;max-width:880px;}
+  footer b{color:var(--bone-dim);font-weight:700;color:var(--amber-dim);}
+  .melody-flag{font-family:var(--mono);font-size:11px;color:var(--green);margin-top:8px;}
+  .toggle-row{display:flex;gap:12px;align-items:flex-start;margin:6px 0 14px;}
+  .switch{position:relative;display:inline-block;width:38px;height:21px;flex:0 0 auto;margin-top:2px;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider-sw{position:absolute;inset:0;background:var(--line);border-radius:21px;transition:.2s;cursor:pointer;}
+  .slider-sw:before{content:'';position:absolute;height:15px;width:15px;left:3px;top:3px;
+    background:var(--bone-dim);border-radius:50%;transition:.2s;}
+  .switch input:checked + .slider-sw{background:var(--amber-dim);}
+  .switch input:checked + .slider-sw:before{transform:translateX(17px);background:var(--amber);}
+  .t-title{font-family:var(--body);font-weight:600;font-size:13.5px;}
+  select:disabled{opacity:0.38;cursor:not-allowed;}
+  .infer-head{font-family:var(--mono);font-size:9px;letter-spacing:0.16em;text-transform:uppercase;
+    color:var(--amber);margin:2px 0 9px;}
+  .infer-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+  .ichip{font-family:var(--mono);font-size:12.5px;padding:6px 11px;border:1px solid var(--line);
+    border-radius:2px;background:var(--ink);color:var(--bone-dim);cursor:pointer;transition:.15s;
+    display:flex;gap:9px;align-items:center;}
+  .ichip:hover{border-color:var(--amber-dim);color:var(--bone);}
+  .ichip.active{border-color:var(--amber);color:var(--amber);box-shadow:0 0 0 1px var(--amber-dim);}
+  .ichip .pctg{font-size:10px;color:var(--amber-dim);}
+  .inv{font-family:var(--mono);font-size:9.5px;color:var(--amber-dim);letter-spacing:0.03em;margin-top:3px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Harmonic<br><em>Transition</em> Engine</h1>
+    <div class="sub">prototype · v0.1<br>12-TET · transposition-invariant<br>pitch-class core / spelled layer</div>
+  </header>
+  <p class="lede">Set a source and target state, drop in a melody fragment, and tune the four weights. The engine enumerates connectors in relative-interval space, scores them on structural metrics alone, and re-sorts live.</p>
+
+  <div class="grid">
+    <div class="card">
+      <div class="ctitle">states &amp; melody</div>
+      <div class="state-row">
+        <div><label>Source tonic</label><select id="sTonic"></select></div>
+        <div><label>Source mode</label><select id="sMode"></select></div>
+      </div>
+      <div class="arrow">↧ modulate ↧</div>
+      <div class="state-row">
+        <div><label>Target tonic</label><select id="tTonic"></select></div>
+        <div><label>Target mode</label><select id="tMode"></select></div>
+      </div>
+      <div class="field" style="margin-top:18px;">
+        <label>Melody fragment at the pivot (optional)</label>
+        <input type="text" id="melody" placeholder="e.g.  E  G  A   (space-separated)" value="E G">
+        <div class="hint">Notes sounding across the transition. Used as a filter (connectors must accommodate them), as an anchor (a note shared by both collections can pivot beneath), and to weight soprano voice-leading. Leave blank for harmony-only ranking.</div>
+      </div>
+      <div class="toggle-row">
+        <label class="switch"><input type="checkbox" id="inferMode"><span class="slider-sw"></span></label>
+        <div><div class="t-title">Infer source from melody</div>
+          <div class="hint" style="margin-top:2px">Ignore the source dropdowns and deduce the most likely starting key/mode from the melody notes alone, then rank connectors from there.</div></div>
+      </div>
+      <div id="inferPanel"></div>
+      <div class="rel" id="relPanel"></div>
+    </div>
+
+    <div class="card weights">
+      <div class="ctitle">dynamic weights</div>
+      <div class="wr">
+        <div class="top"><span class="nm">Smoothness</span><span class="vl" id="vSmooth">50</span></div>
+        <div class="desc">Common tones + minimal voice-leading. High = sliding, low-friction connections.</div>
+        <input type="range" id="wSmooth" min="0" max="100" value="50">
+      </div>
+      <div class="wr">
+        <div class="top"><span class="nm">Directness</span><span class="vl" id="vDirect">50</span></div>
+        <div class="desc">Functional cadential pull toward the target. High = strong, conclusive arrivals (V⁷→I).</div>
+        <input type="range" id="wDirect" min="0" max="100" value="50">
+      </div>
+      <div class="wr">
+        <div class="top"><span class="nm">Modality preservation</span><span class="vl" id="vMod">70</span></div>
+        <div class="desc">Protects the target mode's identity. High = down-ranks foreign leading tones, favours characteristic-degree cadences.</div>
+        <input type="range" id="wMod" min="0" max="100" value="70">
+      </div>
+      <div class="wr">
+        <div class="top"><span class="nm">Melody fit</span><span class="vl" id="vMel">60</span></div>
+        <div class="desc">How comfortably the connector hosts the supplied melody notes (chord tone &gt; tension &gt; resolving non-chord tone).</div>
+        <input type="range" id="wMel" min="0" max="100" value="60">
+      </div>
+    </div>
+  </div>
+
+  <div class="results-head">
+    <h2>Ranked connectors</h2>
+    <div class="meta" id="resMeta"></div>
+  </div>
+  <div id="results"></div>
+
+  <footer>
+    <b>How to read this.</b> Distances (common tones, voice-leading) are computed in pure pitch-class space — twelve objects, enharmonics collapsed — which keeps the core universal and temperament-grounded. Function (does this <i>resolve like</i> a dominant, or expand like an augmented sixth?) lives in the spelled layer beneath each result. Each connector now builds a full path: the predominant slot tries both <b>ii</b> and <b>IV</b> and keeps whichever voice-leads more smoothly, and the cadence stays mode-appropriate (no foreign leading tone forced into a modal target). The <b>inversion</b> line under each chord is the bass note that minimises total bass motion across the chain — solved as a shortest-path over the progression — with the source, the cadence, and the final tonic pinned to root position for cadential weight and 6/4s penalised per convention. <b>Infer source from melody</b> deduces the most likely starting key/mode from the notes alone by weighting each note's scale-degree stability against every candidate collection. "Exhaustive" still means exhaustive within a triad-plus-seventh vocabulary; widening it grows the candidate set but not the method.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   CORE DATA  — everything computed in pitch-class space (0–11)
+   ============================================================ */
+const PC_SHARP = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const PC_FLAT  = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+const NOTE_TO_PC = {C:0,'B#':0,'C#':1,DB:1,'DB':1,D:2,'D#':3,EB:3,E:4,FB:4,F:5,'E#':5,
+  'F#':6,GB:6,G:7,'G#':8,AB:8,A:9,'A#':10,BB:10,B:11,CB:11};
+
+const MODES = {
+  Ionian:     [0,2,4,5,7,9,11],
+  Dorian:     [0,2,3,5,7,9,10],
+  Phrygian:   [0,1,3,5,7,8,10],
+  Lydian:     [0,2,4,6,7,9,11],
+  Mixolydian: [0,2,4,5,7,9,10],
+  Aeolian:    [0,2,3,5,7,8,10],
+  Locrian:    [0,1,3,5,6,8,10],
+};
+const MODE_ORDER = ['Ionian','Dorian','Phrygian','Lydian','Mixolydian','Aeolian','Locrian'];
+
+// flat-side keys spell with flats; otherwise sharps
+const FLAT_TONICS = new Set([5,10,3,8,1,6]); // F Bb Eb Ab Db Gb
+function speller(tonicPc){ return FLAT_TONICS.has(tonicPc) ? PC_FLAT : PC_SHARP; }
+
+const ROMAN_MAJOR = {0:'I',2:'II',4:'III',5:'IV',7:'V',9:'VI',11:'VII'};
+const ROMAN_ALT   = {1:'♭II',3:'♭III',6:'♯IV',8:'♭VI',10:'♭VII'};
+
+function scaleOf(tonic, mode){ return MODES[mode].map(i => (tonic + i) % 12); }
+
+function triadQuality(t,f){ // intervals from root, mod 12
+  if(t===4&&f===7)return'maj'; if(t===3&&f===7)return'min';
+  if(t===3&&f===6)return'dim'; if(t===4&&f===8)return'aug'; return'?';
+}
+function diatonicTriad(scale, deg){
+  const r=scale[deg], th=scale[(deg+2)%7], fi=scale[(deg+4)%7];
+  return {pcs:[r,th,fi], root:r,
+    quality:triadQuality((th-r+12)%12,(fi-r+12)%12)};
+}
+function roman(relRoot, quality){
+  let base = ROMAN_MAJOR[relRoot] || ROMAN_ALT[relRoot] || '?';
+  if(quality==='min') base = base.toLowerCase();
+  else if(quality==='dim') base = base.toLowerCase()+'°';
+  else if(quality==='aug') base = base+'+';
+  return base;
+}
+function nameChord(pcs, tonicPc){
+  const sp = speller(tonicPc);
+  return pcs.map(p=>sp[p]).join('–');
+}
+
+/* ---- voice-leading: minimal total semitone motion between equal-size sets ---- */
+function pcStep(a,b){ const d=Math.abs(a-b)%12; return Math.min(d,12-d); }
+function perms(a){ if(a.length<=1)return[a]; const o=[];
+  for(let i=0;i<a.length;i++){ const r=a.slice(0,i).concat(a.slice(i+1));
+    for(const p of perms(r)) o.push([a[i],...p]); } return o; }
+function vlCost(A,B){ let best=Infinity;
+  for(const p of perms(B)){ let s=0; for(let i=0;i<A.length;i++) s+=pcStep(A[i],p[i]);
+    best=Math.min(best,s);} return best; }
+
+/* ============================================================
+   CHAIN BUILDING — assemble a full path that lands on the tonic
+   source context → connector → predominant → mode-appropriate
+   cadence → target tonic.  Chain shape depends on connector role.
+   ============================================================ */
+const MINOR_MODES = new Set(['Dorian','Phrygian','Aeolian','Locrian']);
+function isMinorMode(m){ return MINOR_MODES.has(m); }
+function tonicRoman(mode){ return mode==='Locrian'?'i°':(isMinorMode(mode)?'i':'I'); }
+
+// predominant options — diatonic ii and IV of the target; the chain picks
+// whichever voice-leads more smoothly in context (exposes e.g. Dorian's major IV).
+function predominantOptions(tScale, tT){
+  const mk=(deg)=>{ const ch=diatonicTriad(tScale,deg);
+    return { pcs:ch.pcs, roman:roman(((ch.root-tT)+12)%12, ch.quality),
+             name:'predominant', predom:true }; };
+  return { ii:mk(1), iv:mk(3) };
+}
+// mode-appropriate cadence chord: functional V⁷ only when a leading tone exists,
+// otherwise the mode's characteristic cadence chord (so chains stay mode-honest).
+function targetCadence(tT, tMode, hasLT){
+  if(hasLT) return { pcs:[(tT+7)%12,(tT+11)%12,(tT+2)%12], roman:'V⁷', name:'dominant', functional:true };
+  const root = (tMode==='Phrygian'||tMode==='Locrian') ? (tT+1) : (tT+10); // ♭II for Phrygian/Locrian, else ♭VII
+  return { pcs:[root%12,(root+4)%12,(root+7)%12],
+           roman:(tMode==='Phrygian'||tMode==='Locrian')?'♭II':'♭VII',
+           name:'modal cadence', functional:false };
+}
+function dominantTriad(tT){ return { pcs:[(tT+7)%12,(tT+11)%12,(tT+2)%12], roman:'V', name:'dominant' }; }
+
+function buildChain(c, ctx){
+  const { srcStep, predom, cadence, tonicStep, tT } = ctx;
+  const conn = { pcs:c.pcs.slice(0,3), roman:c.roman, name:c.name, connector:true };
+  switch(c.tag){
+    case 'functional':   // source → predominant → V⁷(this connector) → I
+      return [srcStep, predom, {...conn, roman:'V⁷', pcs:c.pcs.slice(0,4), cadence:true}, tonicStep];
+    case 'characteristic': // source → predominant → modal cadence(this connector) → i
+      return [srcStep, predom, {...conn, cadence:true}, tonicStep];
+    case 'spelled-fork': // source → aug6(this connector) → V → I
+      return [srcStep, conn, {...dominantTriad(tT), cadence:true}, tonicStep];
+    default:             // pivot / colour: source → connector → predominant → cadence → tonic
+      return [srcStep, conn, predom, {...cadence, cadence:true}, tonicStep];
+  }
+}
+
+/* ============================================================
+   INVERSION ASSIGNMENT — pick the bass note of each chord to
+   minimise total bass motion across the chain (a smooth bass line),
+   penalising restricted 6/4s, and pinning the source, the cadence,
+   and the final tonic to root position for cadential strength.
+   Solved exactly with a small Viterbi DP over the chain.
+   ============================================================ */
+const TRIAD_FIG = ['5/3','6','6/4'], TRIAD_INV=['root','1st inv','2nd inv'], TRIAD_PEN=[0,0.25,1.4];
+const SEV_FIG   = ['7','6/5','4/3','4/2'], SEV_INV=['root','1st inv','2nd inv','3rd inv'], SEV_PEN=[0,0.3,0.6,0.85];
+function assignInversions(chain){
+  const opts = chain.map(s=>{
+    const pin = s.source || s.tonic || s.cadence;   // forced to root position
+    const seventh = s.pcs.length===4;
+    const out=[];
+    s.pcs.forEach((pc,ti)=>{
+      if(pin && ti!==0) return;
+      out.push({ pc, ti,
+        figure: seventh?SEV_FIG[ti]:TRIAD_FIG[ti],
+        inv:    seventh?SEV_INV[ti]:TRIAD_INV[ti],
+        pen:    seventh?SEV_PEN[ti]:TRIAD_PEN[ti] });
+    });
+    return out;
+  });
+  const N=opts.length;
+  const dp=opts.map(o=>o.map(()=>Infinity)), back=opts.map(o=>o.map(()=>-1));
+  opts[0].forEach((o,j)=>dp[0][j]=o.pen);
+  for(let i=1;i<N;i++) opts[i].forEach((o,j)=>{
+    opts[i-1].forEach((p,k)=>{ const cost=dp[i-1][k]+pcStep(p.pc,o.pc)+o.pen;
+      if(cost<dp[i][j]){ dp[i][j]=cost; back[i][j]=k; } });
+  });
+  let bj=0; dp[N-1].forEach((v,j)=>{ if(v<dp[N-1][bj]) bj=j; });
+  const chosen=new Array(N); let cur=bj;
+  for(let i=N-1;i>=0;i--){ chosen[i]=opts[i][cur]; cur=back[i][cur]; }
+  return chosen;
+}
+
+/* ============================================================
+   CANDIDATE GENERATION  (relative to target tonic)
+   each candidate carries its own directness + modality priors,
+   then smoothness + melody are computed against the actual states
+   ============================================================ */
+function generateCandidates(sT,sMode,tT,tMode){
+  const sScale=scaleOf(sT,sMode), tScale=scaleOf(tT,tMode);
+  const tSet=new Set(tScale), sSet=new Set(sScale);
+  const targetTonicTriad = diatonicTriad(tScale,0);
+  const tonicPcs = targetTonicTriad.pcs;
+  const targetHasLT = tSet.has((tT+11)%12); // natural leading tone present?
+  const C=[]; // candidates
+
+  const major=(r)=>[r%12,(r+4)%12,(r+7)%12];
+  const minor=(r)=>[r%12,(r+3)%12,(r+7)%12];
+  const dom7 =(r)=>[r%12,(r+4)%12,(r+7)%12,(r+10)%12];
+
+  function add(o){
+    o.relRoot = ((o.pcs[0]-tT)+12)%12;
+    o.roman   = o.roman || roman(o.relRoot, o.quality||'maj');
+    C.push(o);
+  }
+
+  // 1 — Functional dominant of target (the brute-force universal answer)
+  add({ name:'Functional dominant', tag:'functional',
+    pcs:dom7((tT+7)), quality:'maj', roman:'V⁷',
+    directness:1.0,
+    modality: targetHasLT ? 0.9 : 0.18,
+    spell:`Spelled as a dominant seventh: the third is a leading tone resolving up a semitone to the new tonic, the seventh resolving down. `+
+      (targetHasLT
+        ? `${tMode} contains that leading tone, so this is both functional and native.`
+        : `${tMode} has a ♭7 subtonic, not a leading tone — playing V⁷ imports a foreign sharpened 7th and the ear will hear major/minor, not ${tMode}. Strong, but it overwrites the mode.`),
+    why:`The tritone + leading-tone pull forces any target. Maximally <b>direct</b>; ${targetHasLT?'mode-safe here':'mode-erasing here'}.`});
+
+  // 2 — Mode-characteristic cadence(s)
+  const modal = {
+    Ionian:    [],
+    Lydian:    [{r:(tT+2),q:'maj',rn:'II',deg:'♯4',txt:'The major II carries Lydian\u2019s raised fourth into the cadence — the one note that separates Lydian from Ionian.'}],
+    Mixolydian:[{r:(tT+10),q:'maj',rn:'♭VII',deg:'♭7',txt:'The ♭VII→I step is Mixolydian\u2019s signature; it cadences with no leading tone, preserving the ♭7.'}],
+    Dorian:    [{r:(tT+10),q:'maj',rn:'♭VII',deg:'♮6/♭7',txt:'♭VII→i keeps the subtonic; pair with the bright major IV to expose Dorian\u2019s natural 6.'},
+                {r:(tT+5),q:'maj',rn:'IV',deg:'♮6',txt:'The major IV is Dorian\u2019s tell — it contains the natural sixth that distinguishes it from Aeolian.'}],
+    Aeolian:   [{r:(tT+10),q:'maj',rn:'♭VII',deg:'♭7',txt:'♭VII→i (often via ♭VI–♭VII–i) is the natural-minor cadence — no raised 7th, mode intact.'}],
+    Phrygian:  [{r:(tT+1),q:'maj',rn:'♭II',deg:'♭2',txt:'The Phrygian cadence: ♭II→i, the ♭2 collapsing a half-step onto the tonic. Its most identifying gesture.'}],
+    Locrian:   [{r:(tT+1),q:'maj',rn:'♭II',deg:'♭2/♭5',txt:'Locrian\u2019s tonic is a diminished triad and resists tonicization; ♭II is the least unstable approach, but expect the centre to feel provisional.'}],
+  };
+  (modal[tMode]||[]).forEach(m=>{
+    add({ name:`Modal cadence · ${m.deg}`, tag:'characteristic',
+      pcs:major(m.r), quality:m.q, roman:m.rn,
+      directness:0.6, modality:1.0,
+      spell:`Native to ${tMode}. ${m.txt}`,
+      why:`Cadences using the mode\u2019s characteristic degree (<b>${m.deg}</b>) — strongest possible <b>modality preservation</b>.`});
+  });
+
+  // 3 — Common-tone pivots (chords diatonic to BOTH collections)
+  const both=[];
+  for(let d=0;d<7;d++){ const ch=diatonicTriad(tScale,d);
+    if(ch.pcs.every(p=>sSet.has(p))) both.push(ch); }
+  both.slice(0,2).forEach(ch=>{
+    add({ name:'Common-tone pivot', tag:'pivot',
+      pcs:ch.pcs, quality:ch.quality,
+      roman: roman(((ch.root-tT)+12)%12, ch.quality),
+      directness:0.35, modality:0.72,
+      spell:`This triad belongs to both ${PC_SHARP[sT]} ${sMode} and ${PC_SHARP[tT]} ${tMode}; it is reinterpreted without any voice moving. Smoothest possible hinge.`,
+      why:`Shared by both collections — pivot beneath it and reassign its function. Low friction, low <b>directness</b>.`});
+  });
+
+  // 4 — Chromatic mediant (warm, common-tone, mode-neutral)
+  add({ name:'Chromatic mediant · ♭VI', tag:'colour',
+    pcs:major(tT+8), quality:'maj', roman:'♭VI',
+    directness:0.4, modality:0.7,
+    spell:`Shares a single common tone with the tonic; the other voices shift by step. No functional leading tone is asserted, so the mode is left untouched — colour without commitment.`,
+    why:`A third-related chord linked by one held tone — surprising yet smooth. Often pairs with a single sustained melody note.`});
+
+  // 5 — Neapolitan (skip if it duplicates a modal ♭II already added)
+  if(!C.some(c=>c.roman==='♭II')){
+    add({ name:'Neapolitan', tag:'colour',
+      pcs:major(tT+1), quality:'maj', roman:'♭II',
+      directness:0.62, modality:0.6,
+      spell:`A ♭II major chord, conventionally in first inversion, sliding to the dominant of the target. Chromatic predominant — strong push, mild mode tint.`,
+      why:`A flat-second predominant — colourful approach with real cadential drive.`});
+  }
+
+  // 6 — Augmented sixth (the spelled-layer demonstration)
+  add({ name:'Augmented sixth', tag:'spelled-fork',
+    pcs:[(tT+8)%12,(tT)%12,(tT+6)%12], quality:'maj', roman:'It⁺⁶→V',
+    directness:0.8, modality:0.48,
+    spell:`Enharmonically identical to a dominant seventh — same keys on the piano — but spelled with an augmented sixth (♭6 and ♯4) that <i>expands outward</i> to the dominant rather than resolving down to a tonic. This is the case pitch-class space cannot see: identical sound, opposite grammar. It lives entirely in the spelled layer.`,
+    why:`Predominant that levers hard into the target\u2019s V. Demonstrates why function needs spelling: the pitch-class core would mistake this for V⁷.`});
+
+  /* ---- build a chain for each candidate; try ii vs IV; score the path ---- */
+  const sTonicTriad = diatonicTriad(sScale,0);
+  const baseCtx = {
+    tT,
+    srcStep:  { pcs:sTonicTriad.pcs, roman:tonicRoman(sMode), name:'source tonic', source:true },
+    cadence:  targetCadence(tT, tMode, targetHasLT),
+    tonicStep:{ pcs:targetTonicTriad.pcs, roman:tonicRoman(tMode), name:'target tonic', tonic:true },
+  };
+  const preOpts = predominantOptions(tScale, tT);
+  const maxVL=6;
+  const overlap=[...tSet].filter(p=>sSet.has(p)).length;
+  const chainVL=(ch)=>{ let t=0; for(let i=0;i<ch.length-1;i++)
+      t+=vlCost(ch[i].pcs.slice(0,3), ch[i+1].pcs.slice(0,3)); return t/(ch.length-1); };
+  C.forEach(c=>{
+    let best=null;
+    ['ii','iv'].forEach(key=>{
+      const chain=buildChain(c, {...baseCtx, predom:preOpts[key]});
+      const usesPre=chain.some(s=>s.predom);
+      const vl=chainVL(chain);
+      if(!best || vl<best.vl) best={chain, vl, key, usesPre};
+    });
+    c.chain      = best.chain;
+    c.predomUsed = best.usesPre ? best.key : null;   // which predominant won (or null if none)
+    c.inversions = assignInversions(c.chain);
+    c.smoothness = clamp01(0.62*(1 - best.vl/maxVL) + 0.38*(overlap/7));
+    c._vl = best.vl;
+  });
+  return { candidates:C, tScale, sScale, tSet, sSet, targetHasLT, tonicPcs, overlap };
+}
+
+function clamp01(x){ return Math.max(0,Math.min(1,x)); }
+
+/* ---- melody fit, distributed across the chain ----
+   one note per successive chord from the connector onward, so the
+   line is scored over the whole transition rather than one vertical ---- */
+function noteFit(m, chordPcs, tSet, tonicPcs){
+  const chord=new Set(chordPcs);
+  if(chord.has(m)) return 1.0;                                      // chord tone
+  if([...chord].some(c=>pcStep(c,m)===2)) return 0.7;              // 9th / colour tension
+  if([...chord,...tonicPcs].some(c=>pcStep(c,m)===1)) return 0.6;  // resolves by semitone
+  if(tSet.has(m)) return 0.45;                                     // diatonic non-chord tone
+  return 0.2;                                                      // foreign clash
+}
+function melodyFitChain(chain, melodyPcs, tSet, tonicPcs){
+  if(melodyPcs.length===0) return {score:1, neutral:true, pairs:[]};
+  const active = chain.slice(1);            // connector … tonic (the part being composed through)
+  const pairs=[]; let total=0;
+  melodyPcs.forEach((m,i)=>{
+    const idx = Math.min(i, active.length-1);
+    const f = noteFit(m, active[idx].pcs.slice(0,3), tSet, tonicPcs);
+    total+=f; pairs.push({pc:m, stepIdx:idx+1, fit:f}); // +1 to align to full chain index
+  });
+  return {score: total/melodyPcs.length, neutral:false, pairs};
+}
+
+/* ============================================================
+   INVERSE INFERENCE — deduce the most likely (tonic, mode) source
+   from a melody fragment alone. Each note is weighted by how strongly
+   its scale-degree implies that tonic (a compact tonal-stability
+   profile); notes outside a collection penalise it. Last/first notes
+   get a small structural bonus (melodies tend to frame the tonic).
+   ============================================================ */
+const DEG_WEIGHT = {0:1.0, 7:0.82, 4:0.6, 3:0.58, 5:0.5, 9:0.46, 2:0.46, 11:0.42, 10:0.42, 8:0.4, 6:0.38, 1:0.38};
+function inferSource(melodyPcs){
+  if(!melodyPcs.length) return [];
+  const res=[];
+  const first=melodyPcs[0], last=melodyPcs[melodyPcs.length-1];
+  for(let t=0;t<12;t++) for(const mode of MODE_ORDER){
+    const set=new Set(scaleOf(t,mode));
+    let s=0;
+    melodyPcs.forEach(p=>{
+      const deg=((p-t)+12)%12;
+      s += set.has(p) ? (DEG_WEIGHT[deg]||0.4) : -0.6;  // foreign note penalised
+    });
+    s/=melodyPcs.length;
+    if(last===t) s+=0.12;                               // resolves to tonic
+    const fd=((first-t)+12)%12; if(fd===0||fd===7) s+=0.05; // opens on tonic/dominant
+    res.push({tonic:t, mode, score:Math.max(0,s)});
+  }
+  res.sort((a,b)=>b.score-a.score);
+  return res;
+}
+
+/* ============================================================
+   PARSE / WIRE-UP
+   ============================================================ */
+function parseMelody(str){
+  return str.trim().split(/[\s,]+/).filter(Boolean).map(tok=>{
+    const t=tok.trim().toUpperCase().replace('♯','#').replace('♭','B');
+    // try direct, then sharp/flat tables
+    if(t in NOTE_TO_PC) return NOTE_TO_PC[t];
+    const m=t.match(/^([A-G])([#B]?)/);
+    if(!m) return null;
+    let pc=NOTE_TO_PC[m[1]];
+    if(m[2]==='#')pc=(pc+1)%12; if(m[2]==='B')pc=(pc+11)%12;
+    return pc;
+  }).filter(p=>p!==null);
+}
+
+function populate(){
+  const tonics=PC_SHARP.map((n,i)=>`<option value="${i}">${n}${PC_FLAT[i]!==n?' / '+PC_FLAT[i]:''}</option>`).join('');
+  sTonic.innerHTML=tonics; tTonic.innerHTML=tonics;
+  const modes=MODE_ORDER.map(m=>`<option>${m}</option>`).join('');
+  sMode.innerHTML=modes; tMode.innerHTML=modes;
+  sTonic.value=0; sMode.value='Ionian'; tTonic.value=2; tMode.value='Dorian';
+}
+
+function run(){
+  const tT=+tTonic.value, tM=tMode.value;
+  const melodyPcs=parseMelody(melody.value);
+  const w={s:+wSmooth.value, d:+wDirect.value, m:+wMod.value, mel:+wMel.value};
+  vSmooth.textContent=w.s; vDirect.textContent=w.d; vMod.textContent=w.m; vMel.textContent=w.mel;
+
+  // ---- source: inferred from melody, or taken from the dropdowns ----
+  const infer = inferMode.checked;
+  sTonic.disabled = sMode.disabled = infer;
+  let sT=+sTonic.value, sM=sMode.value, inferred=null;
+  if(infer){
+    const ranking=inferSource(melodyPcs);
+    const key=melody.value.trim();
+    if(key!==lastInferKey){ inferIdx=0; lastInferKey=key; }   // reset only when melody text changes
+    if(ranking.length){
+      inferIdx=Math.min(inferIdx, Math.min(ranking.length,6)-1);
+      inferred=ranking[inferIdx];
+      sT=inferred.tonic; sM=inferred.mode;
+      sTonic.value=sT; sMode.value=sM;
+      const top=ranking.slice(0,6);
+      inferPanel.innerHTML=`<div class="infer-head">inferred source — pick one</div><div class="infer-chips">`+
+        top.map((r,i)=>`<div class="ichip ${i===inferIdx?'active':''}" onclick="setInfer(${i})">${PC_SHARP[r.tonic]} ${r.mode}<span class="pctg">${Math.round(r.score*100)}</span></div>`).join('')+`</div>`;
+    } else {
+      inferPanel.innerHTML=`<div class="infer-head" style="color:var(--bone-dim)">enter melody notes above to infer a source</div>`;
+    }
+  } else { inferPanel.innerHTML=''; }
+
+  const G=generateCandidates(sT,sM,tT,tM);
+  const sp=speller(tT);
+  const commonMel = melodyPcs.filter(p=>G.sSet.has(p)&&G.tSet.has(p));
+
+  // relationship panel
+  const sharedNotes=[...G.tSet].filter(p=>G.sSet.has(p)).map(p=>sp[p]);
+  relPanel.innerHTML=`
+    <div class="item"><div class="k">Collection overlap</div><div class="v ${G.overlap>=6?'good':G.overlap<=3?'warn':''}">${G.overlap} / 7 notes</div></div>
+    <div class="item"><div class="k">Target leading tone</div><div class="v ${G.targetHasLT?'good':'warn'}">${G.targetHasLT?'present':'absent (♭7)'}</div></div>
+    <div class="item" style="grid-column:1/3"><div class="k">Shared pitch classes</div><div class="v">${sharedNotes.join('  ')||'—'}</div></div>
+    <div class="item" style="grid-column:1/3"><div class="k">Melody common tones</div><div class="v ${commonMel.length?'good':''}">${commonMel.length?commonMel.map(p=>sp[p]).join('  ')+'  → can pivot beneath':'none supplied / none shared'}</div></div>`;
+
+  // score + sort
+  const wSum=(w.s+w.d+w.m+w.mel)||1;
+  const scored=G.candidates.map(c=>{
+    const mf=melodyFitChain(c.chain, melodyPcs, G.tSet, G.tonicPcs);
+    const total=(w.s*c.smoothness + w.d*c.directness + w.m*c.modality + w.mel*mf.score)/wSum;
+    return {...c, melFit:mf.score, melNeutral:mf.neutral, melPairs:mf.pairs, total};
+  }).sort((a,b)=>b.total-a.total);
+
+  resMeta.textContent=`${PC_SHARP[sT]} ${sM}${infer?' (inferred)':''}  →  ${PC_SHARP[tT]} ${tM}  ·  ${scored.length} connectors`;
+
+  const sp2=sp;
+  results.innerHTML=scored.map((c,i)=>{
+    const pct=v=>Math.round(v*100);
+    // map melody pc -> chain step index for superscript display
+    const melAt={};
+    (c.melPairs||[]).forEach(p=>{ (melAt[p.stepIdx]=melAt[p.stepIdx]||[]).push(p.pc); });
+    const chainHtml = c.chain.map((step,si)=>{
+      const cls = step.source?'src':step.connector?'conn':step.tonic?'tonic':'';
+      const mel = melAt[si] ? `<span class="melnote"><b>${melAt[si].map(p=>sp2[p]).join('/')}</b></span>` : `<span class="melnote"></span>`;
+      const badge = step.connector?`<span class="conn-label">connector</span>`:'';
+      const iv = c.inversions[si];
+      const invLine = `<div class="inv">${iv.figure} · bass ${sp2[iv.pc]}</div>`;
+      const chip = `<div class="step ${cls}">${mel}<div class="ch" style="position:relative">${badge}${nameChord(step.pcs, tT)}</div><div class="rn">${step.roman}</div>${invLine}</div>`;
+      const arrow = si<c.chain.length-1?`<span class="arrowm">→</span>`:'';
+      return chip+arrow;
+    }).join('');
+    const preNote = c.predomUsed?`<div class="melody-flag" style="color:var(--amber-dim)">predominant: ${c.predomUsed.toUpperCase()} chosen (smoother bass than ${c.predomUsed==='ii'?'IV':'ii'})</div>`:'';
+    return `<div class="result ${i===0?'top':''}">
+      <div class="rank">${String(i+1).padStart(2,'0')}</div>
+      <div class="r-name">${c.name}<span class="r-tag">${c.tag}</span></div>
+      <div class="chain">${chainHtml}</div>
+      ${preNote}
+      <div class="why">${c.why}</div>
+      <div class="spell">spelled layer · ${c.spell}</div>
+      ${c.melNeutral?'':`<div class="melody-flag">melody line ${melodyPcs.map(p=>sp2[p]).join(' ')} distributed across the chain (red = note over its chord)</div>`}
+      <div class="bars">
+        <div class="bar"><div class="bl">Smooth<span>${pct(c.smoothness)}</span></div><div class="track"><div class="fill f-smooth" style="width:${pct(c.smoothness)}%"></div></div></div>
+        <div class="bar"><div class="bl">Direct<span>${pct(c.directness)}</span></div><div class="track"><div class="fill f-direct" style="width:${pct(c.directness)}%"></div></div></div>
+        <div class="bar"><div class="bl">Modal<span>${pct(c.modality)}</span></div><div class="track"><div class="fill f-mod" style="width:${pct(c.modality)}%"></div></div></div>
+        <div class="bar"><div class="bl">Melody<span>${c.melNeutral?'—':pct(c.melFit)}</span></div><div class="track"><div class="fill f-mel" style="width:${c.melNeutral?0:pct(c.melFit)}%"></div></div></div>
+      </div>
+      <div class="score-pill"><div class="num">${(c.total*100).toFixed(0)}</div><div class="lbl">weighted</div></div>
+    </div>`;
+  }).join('');
+}
+
+const sTonic=document.getElementById('sTonic'),sMode=document.getElementById('sMode'),
+  tTonic=document.getElementById('tTonic'),tMode=document.getElementById('tMode'),
+  melody=document.getElementById('melody'),inferMode=document.getElementById('inferMode'),
+  inferPanel=document.getElementById('inferPanel'),
+  wSmooth=document.getElementById('wSmooth'),wDirect=document.getElementById('wDirect'),
+  wMod=document.getElementById('wMod'),wMel=document.getElementById('wMel'),
+  vSmooth=document.getElementById('vSmooth'),vDirect=document.getElementById('vDirect'),
+  vMod=document.getElementById('vMod'),vMel=document.getElementById('vMel'),
+  relPanel=document.getElementById('relPanel'),results=document.getElementById('results'),
+  resMeta=document.getElementById('resMeta');
+
+let inferIdx=0, lastInferKey='';
+window.setInfer=function(i){ inferIdx=i; run(); };
+
+populate();
+[sTonic,sMode,tTonic,tMode,melody,inferMode,wSmooth,wDirect,wMod,wMel].forEach(el=>{
+  el.addEventListener('input',run); el.addEventListener('change',run);
+});
+run();
+</script>
+</body>
+</html>
