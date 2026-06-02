@@ -85,6 +85,9 @@ npm run dev        # http://localhost:5173
 
 ## Status
 
-🚧 Early planning. The next milestone is scaffolding the monorepo and bringing
-both existing tools into the shell. Track the plan and open questions in
-[PLAN.md](./PLAN.md).
+🚧 Early planning — architecture decided. Idolmancer is **offline-first and
+strictly client-side**: a Tauri shell, a single dark theme, equal-temperament
+tuning (toggleable per tool), wav-file import for analysis (no live capture),
+app-storage persistence, and a shared data model that lets tools pass work
+between each other. The next milestone is scaffolding the monorepo and bringing
+both existing tools into the shell. See [PLAN.md](./PLAN.md) for decisions and roadmap.

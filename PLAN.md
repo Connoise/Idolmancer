@@ -72,8 +72,10 @@ importable by the shell without modification.
 - The shell is a normal web app inside the native window, so day-to-day development
   is just a browser (`npm run dev`); the native wrapper is only needed for packaging.
 
-> _This is the recommended default. The shell choice (Tauri vs Electron vs plain PWA)
-> is **Open Question #1** below — it is reversible early and worth confirming._
+> ✅ **Confirmed.** Tauri is approved. The product is **offline-first** and **strictly
+> client-side** — no server, no network dependency. Distribution is informal (personal
+> use by you and a few others later), so no installer/store/signing effort is planned.
+> Android later targets **full feature parity** (no timeline).
 
 ### 3.2 Monorepo layout
 
@@ -93,10 +95,12 @@ idolmancer/
 │  ├─ spectrum/           # future
 │  └─ eq-preview/         # future
 ├─ packages/
+│  ├─ data-model/         # shared types + cross-tool "current selection" store (see §3.5)
 │  ├─ theory-core/        # shared music-theory math (scales, chords, pitch classes)
-│  ├─ audio-engine/       # shared Web Audio helpers (playback, analyser, transport)
+│  ├─ audio-engine/       # shared Web Audio helpers (playback, wav decode/analysis)
+│  ├─ storage/            # app-storage persistence (projects, presets, wav files)
 │  ├─ ui/                 # shared React components (controls, panels, piano, meters)
-│  └─ tokens/             # design tokens / Tailwind preset (one visual language)
+│  └─ tokens/             # design tokens / Tailwind preset (single dark theme)
 ├─ PLAN.md
 └─ README.md
 ```
@@ -122,68 +126,131 @@ component into a page/route. Adding a tool = add a package + one registry entry.
 
 ### 3.4 Shared concerns owned by `packages/`
 - **theory-core:** note/interval/scale/chord math reused by chordgen, transition
-  engine, and harmonics — single source of truth, no duplication.
-- **audio-engine:** one Web Audio context, transport, playback, and an `AnalyserNode`
-  pipeline reused by waveform/spectrum/EQ tools and chordgen playback.
-- **ui + tokens:** one design language and theme (dark mode) across all pages.
+  engine, and harmonics — single source of truth, no duplication. Exposes a
+  **tuning context** (12-TET / equal temperament fixed for now, with a reference
+  pitch) that tools can toggle/consume where relevant (Q8).
+- **audio-engine:** one Web Audio context, plus **wav decode + offline analysis**
+  (FFT/feature extraction over imported files) reused by waveform/spectrum/EQ tools
+  and chordgen playback. Analysis runs **offline over imported wav files** — no live
+  capture and no real-time pipeline required (Q4, Q10).
+- **storage:** persistence to **app storage** for projects, presets, and imported
+  wav samples (Q5). No cloud sync.
+- **ui + tokens:** one design language and a **single dark theme** across all pages;
+  no extra accessibility accommodations planned at this time (Q9).
+
+### 3.5 Shared data model & cross-tool associations (Q6)
+
+You want tools to share a **unified language of data** that can be refined as
+relationships emerge. The `data-model` package owns that vocabulary so tools agree
+on types and can pass work between each other:
+
+- **Canonical types:** `PitchClass`, `Note`, `Interval`, `Chord`, `Progression`,
+  `KeyMode`, `TuningContext`, `AudioSample` (decoded wav), `Selection`.
+- **A shared "current selection" store** (a small framework-agnostic state container
+  the shell provides, e.g. Zustand): the user's active key/mode/chord/progression and
+  any loaded sample. Tools **read** it to seed their inputs and **write** it to publish
+  results — so a chordgen progression can flow into the transition engine, and a chord
+  can flow into the harmonics tool, without point-to-point coupling.
+- **Refine over time:** start with the minimum (key/mode + chord + progression +
+  sample) and grow the schema as real cross-tool relationships appear. Versioning the
+  schema lives here too, keeping migrations in one place.
+
+Tools must depend only on `data-model` types, never on each other directly — this is
+what keeps them independently developable while still interoperable.
 
 ---
 
 ## 4. Phased roadmap
 
 ### Phase 0 — Foundation
-- [ ] Decide shell (confirm Open Q #1) and package manager (pnpm recommended).
-- [ ] Scaffold monorepo (workspaces), shared `tokens` Tailwind preset, CI (lint + test + build).
+- [ ] Package manager = **pnpm**; scaffold monorepo workspaces.
+- [ ] Create `tokens` (dark-theme Tailwind preset), `data-model`, and `theory-core` packages.
+- [ ] Minimal CI: lint → typecheck → test → build (see §5.2).
 - [ ] Stand up an empty `apps/shell` with routing, a nav sidebar, and the tool registry.
 
 ### Phase 1 — Integrate the two existing tools
 - [ ] Move `chordgen/` → `tools/chordgen/`; expose its manifest + default component.
 - [ ] Port `transition_engine.html` → `tools/transition-engine/` as `theory-core` math +
-      a React view. Add unit tests for the voice-leading/inversion logic.
-- [ ] Render both inside the shell as pages. First end-to-end build of the desktop app.
+      a React view. Add Vitest unit tests for the voice-leading/inversion logic.
+- [ ] Render both inside the shell as pages. First end-to-end Tauri build (Windows 11).
 
 ### Phase 2 — Shared foundations
-- [ ] Extract common theory math from chordgen + transition engine into `theory-core`.
-- [ ] Build `audio-engine` (shared context, transport, analyser).
+- [ ] Extract common theory math from chordgen + transition engine into `theory-core`
+      (incl. the equal-temperament **tuning context** + toggle).
+- [ ] Build the **current-selection store** and `storage` (app-storage persistence).
+- [ ] Wire the first cross-tool association (chordgen progression → transition engine).
 - [ ] Build the `harmonics` and `bpm-ms` tools (light, mostly theory-core + UI).
 
-### Phase 3 — Analysis tools
-- [ ] `waveform`, `spectrum`, `eq-preview` on top of `audio-engine`.
-- [ ] Audio file import + (if confirmed) live input capture.
+### Phase 3 — Analysis tools (offline, wav-based)
+- [ ] `audio-engine`: wav import/decode + offline FFT/feature extraction (no real-time).
+- [ ] `waveform`, `spectrum`, `eq-preview` reading imported wav samples from the store.
 
-### Phase 4 — Desktop polish & release
-- [ ] Persistence/presets, cross-tool data flow, settings (tuning, theme).
-- [ ] Packaging, code signing, installer, auto-update for Windows 11.
+### Phase 4 — Desktop polish
+- [ ] Presets, richer cross-tool data flow, settings (tuning toggle, theme).
+- [ ] Tauri packaging for Windows 11 (informal distribution — no store/signing).
 
-### Phase 5 — Android (later)
-- [ ] Tauri mobile build; touch/responsive passes; decide feature parity (Open Q #14).
+### Phase 5 — Android (later, full parity)
+- [ ] Tauri mobile build; touch/responsive passes targeting **full feature parity**.
 
 ---
 
-## 5. Open questions (to confirm before/while building)
+## 5. Resolved decisions
 
-> These are the questions whose answers most shape the architecture. Defaults
-> reflect the recommendations above; confirming or overriding them is the next step.
+These are settled and baked into the architecture above.
 
-1. **Shell technology** — Tauri v2 (recommended), Electron, or plain PWA? This sets the desktop **and** Android path.
-2. **Offline-first?** — Must every tool work with zero network? (Assumed: yes.)
-3. **Backend?** — Is anything allowed to require a server/cloud service, or strictly client-side? (Assumed: strictly client-side.)
-4. **Audio input scope** — Do the analysis tools need **live mic/line capture**, or only imported files? Which file formats (wav/mp3/flac/aiff)?
-5. **Persistence** — Where do user projects/presets live: app storage, user-chosen files, and/or cloud sync across devices?
-6. **Cross-tool data flow** — Should one tool's output feed another (e.g. a chordgen progression → transition engine → harmonics)? Do we need a shared "current project/selection" state?
-7. **MIDI** — Beyond chordgen's file export, do you want **Web MIDI** device in/out? Any DAW/VST integration?
-8. **Tuning system** — Fixed 12-TET at A=440, or adjustable reference pitch / alternate temperaments / microtonal support? (Critical for the harmonics tool.)
-9. **Design & accessibility** — Is there a brand/visual identity for "Idolmancer"? Dark mode only or themeable? Any accessibility targets (keyboard, contrast, screen reader)?
-10. **DSP performance targets** — Acceptable to do all FFT/analysis in-browser (Web Audio + WASM)? Target sample rate, FFT size, and latency for real-time spectrum/waveform?
-11. **Distribution** — How do you want to ship Windows builds: standalone installer, MSIX, or Microsoft Store? Code signing certificate available? Auto-update wanted? License (proprietary vs open source)?
-12. **Tool coupling/versioning** — Should tools live in **this monorepo** (recommended) or stay as separate repos pulled in via git submodules / a private npm registry? How should a tool update propagate to the shell?
-13. **Testing & CI expectations** — How much do you want: unit tests for theory/DSP math, visual/snapshot tests, audio regression tests, automated builds per PR?
-14. **Android scope** — When mobile arrives: full feature parity or a curated subset? Touch-first redesign or responsive reuse of the desktop UI? Rough timeline.
-15. **Users & scale** — Single local user forever, or eventual accounts/sync? Any monetization/licensing? Internationalization needed?
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | Shell technology | **Tauri** (Windows 11 now, Android later). |
+| 2 | Offline | **Offline-first / ideal** — no network dependency. |
+| 3 | Backend | **Strictly client-side.** |
+| 4 | Audio input | **No live capture.** Import **wav files**. |
+| 5 | Persistence | **App storage.** |
+| 6 | Cross-tool data | **Yes** — shared `data-model` vocabulary + "current selection" store, refined over time (see §3.5). |
+| 7 | MIDI | **No Web MIDI.** (chordgen keeps file export.) |
+| 8 | Tuning | **Fixed/equal temperament**, exposed as a **toggle** where a tool needs it. |
+| 9 | Design / a11y | **Single dark theme**, no special accommodations now. |
+| 10 | DSP | **No real-time.** Offline analysis over imported wav. |
+| 11 | Distribution | **None** — personal use by you + a few others. |
+| 14 | Android | **Full feature parity**, no timeline. |
+| 15 | Users / scale | **Mainly a single user**, no monetization, no i18n. |
+
+### 5.1 Tool-update propagation (Q12 — you were unsure)
+
+Because everything lives in **one monorepo with workspaces**, there is no
+cross-repo "publish" step to worry about: the shell imports each tool directly
+from the workspace, so **the moment a tool's code changes, the next build of the
+shell picks it up automatically.** Recommendation:
+
+- Treat tools and `packages/*` as **internal workspace packages** referenced by
+  name (e.g. `"@idolmancer/chordgen": "workspace:*"`). No registry, no submodules.
+- Keep a lightweight **changelog per tool** and bump its `manifest.version` when its
+  behaviour changes, so the shell can show "what's new" — but propagation itself is
+  just `git pull` + build.
+- _If_ a tool ever needs to be developed in a fully separate repo, add it back as a
+  published private package or a git submodule then — but don't pay that complexity
+  cost until there's a concrete reason. **Default: keep it all in this monorepo.**
+
+### 5.2 Testing & CI (Q13 — you were unsure)
+
+For a small/single-user project, aim for **high-value tests only**, not exhaustive
+coverage:
+
+- **Unit-test the pure logic** in `theory-core`, `data-model`, and the ported
+  transition-engine math with **Vitest**. These are deterministic pure functions —
+  cheap to test and exactly where a silent wrong answer would hurt most (a bad chord
+  or voice-leading is hard to spot by eye).
+- **Skip** visual/snapshot and audio-regression tests for now — low payoff at this scale.
+- A minimal **CI** on each push (GitHub Actions): `lint` → `typecheck` → `test` →
+  `build`. This catches breakage early and costs almost nothing to maintain.
+- Revisit if/when the audience or tool count grows.
 
 ---
 
 ## 6. Immediate next steps
-1. Get answers to the Open Questions (especially #1, #4, #8, #11).
-2. Choose package manager and scaffold the monorepo (Phase 0).
-3. Port the transition engine to TypeScript and bring both existing tools into the shell (Phase 1).
+1. Choose package manager (**pnpm** recommended) and scaffold the monorepo (Phase 0):
+   workspaces, the `data-model`/`theory-core`/`tokens` packages, the empty `apps/shell`,
+   and the minimal CI from §5.2.
+2. Port the transition engine to TypeScript (`theory-core` math + React view) and bring
+   both existing tools into the shell as registered pages (Phase 1).
+3. Stand up the shared "current selection" store and wire the first cross-tool
+   association (chordgen progression → transition engine).
