@@ -72,11 +72,16 @@ packages/
   data-model/             # canonical types + cross-tool selection store
   theory-core/            # pitch/scale/chord/tuning math (unit-tested)
   storage/                # app-storage persistence for the shared selection
+  audio-engine/           # offline DSP: WAV decode, FFT, peaks, biquad EQ (tested)
+  ui/                     # shared React components (WavImport, …)
 tools/
   chordgen/               # chord & progression generator (Tone.js + MIDI export)
   transition-engine/      # harmonic voice-leading engine (typed core + React view)
   harmonics/              # note → Hz, harmonic & sub-harmonic series
   bpm-ms/                 # tempo → milliseconds with subdivisions
+  waveform/               # time-domain view of an imported wav
+  spectrum/               # frequency-domain (FFT) view of an imported wav
+  eq-preview/             # filter response curve + before/after spectrum overlay
 ```
 
 Each tool is a `@idolmancer/*` package exporting a default React component and a
@@ -103,13 +108,13 @@ CI runs lint → typecheck → test → build on every push (`.github/workflows/
 
 ## Status
 
-🚧 Phases 0–2 complete. The monorepo foundation is in place; four tools (chordgen,
-transition engine, harmonics, bpm-ms) are integrated as lazy-loaded pages; shared
-theory math lives in `theory-core`; the cross-tool selection is persisted to app
-storage; and the first association is wired (chordgen publishes its key/scale, which
-the transition engine and harmonics tools can load). Idolmancer is **offline-first
-and strictly client-side**: a Tauri shell, a single dark theme, equal-temperament
-tuning (toggleable where relevant), wav-file import for analysis (no live capture),
-and a shared data model that lets tools pass work between each other. Next: Phase 3 —
-the `audio-engine` (wav decode + offline analysis) and the waveform/spectrum/EQ
-tools. See [PLAN.md](./PLAN.md) for decisions and roadmap.
+🚧 Phases 0–3 complete. The monorepo hosts **seven tools** as lazy-loaded pages —
+chordgen, transition engine, harmonics, bpm-ms, waveform, spectrum, and EQ preview.
+Shared theory math lives in `theory-core` and offline DSP (WAV decode, FFT, biquad
+EQ) in `audio-engine`; the cross-tool selection is persisted to app storage; wav
+files imported via the shared `WavImport` control are read by every analysis tool.
+Idolmancer is **offline-first and strictly client-side**: a Tauri shell, a single
+dark theme, equal-temperament tuning (toggleable where relevant), wav-file import for
+analysis (no live capture), and a shared data model that lets tools pass work between
+each other. Next: Phase 4 — desktop polish (presets, settings, Tauri packaging). See
+[PLAN.md](./PLAN.md) for decisions and roadmap.

@@ -4,6 +4,9 @@ import { manifest as chordgen } from '@idolmancer/chordgen/manifest';
 import { manifest as transitionEngine } from '@idolmancer/transition-engine/manifest';
 import { manifest as harmonics } from '@idolmancer/harmonics/manifest';
 import { manifest as bpmMs } from '@idolmancer/bpm-ms/manifest';
+import { manifest as waveform } from '@idolmancer/waveform/manifest';
+import { manifest as spectrum } from '@idolmancer/spectrum/manifest';
+import { manifest as eqPreview } from '@idolmancer/eq-preview/manifest';
 
 /**
  * A registered tool: its framework-agnostic manifest plus a lazy loader for its
@@ -25,6 +28,9 @@ export const tools: ToolRegistryEntry[] = [
   { manifest: transitionEngine, load: () => import('@idolmancer/transition-engine') },
   { manifest: harmonics, load: () => import('@idolmancer/harmonics') },
   { manifest: bpmMs, load: () => import('@idolmancer/bpm-ms') },
+  { manifest: waveform, load: () => import('@idolmancer/waveform') },
+  { manifest: spectrum, load: () => import('@idolmancer/spectrum') },
+  { manifest: eqPreview, load: () => import('@idolmancer/eq-preview') },
 ];
 
 export function findTool(id: string | undefined): ToolRegistryEntry | undefined {

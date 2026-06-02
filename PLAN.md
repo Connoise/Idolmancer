@@ -216,9 +216,20 @@ what keeps them independently developable while still interoperable.
 > `pcStep` + the scale/mode adapter that actually enables interop. Deeper chordgen
 > dedup can follow when a second tool needs the same tables.
 
-### Phase 3 — Analysis tools (offline, wav-based)
-- [ ] `audio-engine`: wav import/decode + offline FFT/feature extraction (no real-time).
-- [ ] `waveform`, `spectrum`, `eq-preview` reading imported wav samples from the store.
+### Phase 3 — Analysis tools (offline, wav-based) ✅ (complete)
+- [x] `audio-engine`: dependency-free WAV (RIFF/PCM) decoder, radix-2 FFT + windowed
+      magnitude spectrum, waveform peak reduction, and RBJ biquad filters (design,
+      magnitude response, offline apply). All pure and unit-tested (8 cases).
+- [x] `ui`: shared `WavImport` control — decodes a wav offline and stores it on the
+      shared selection, so a file imported in one analysis tool is seen by all.
+- [x] `waveform`, `spectrum`, and `eq-preview` tools read the imported sample from the
+      store and render to canvas (time-domain, log-frequency FFT, and a filter
+      response curve overlaid with before/after spectra). All offline — no real-time.
+
+> The DSP lives entirely in the testable `audio-engine` core; the tools are thin
+> canvas views over it. EQ-preview demonstrates the "frequency response → sample"
+> ask directly: it filters the loaded wav offline and overlays the original vs
+> filtered spectrum beneath the response curve.
 
 ### Phase 4 — Desktop polish
 - [ ] Presets, richer cross-tool data flow, settings (tuning toggle, theme).
