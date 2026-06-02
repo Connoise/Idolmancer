@@ -176,11 +176,24 @@ what keeps them independently developable while still interoperable.
 > lint → typecheck → test → build on every push. The `tools/*` workspace glob is
 > commented out until Phase 1 adds the first tool.
 
-### Phase 1 — Integrate the two existing tools
-- [ ] Move `chordgen/` → `tools/chordgen/`; expose its manifest + default component.
-- [ ] Port `transition_engine.html` → `tools/transition-engine/` as `theory-core` math +
-      a React view. Add Vitest unit tests for the voice-leading/inversion logic.
-- [ ] Render both inside the shell as pages. First end-to-end Tauri build (Windows 11).
+### Phase 1 — Integrate the two existing tools ✅ (complete)
+- [x] Move `chordgen/` → `tools/chordgen/`; expose its manifest + default component.
+- [x] Port `transition_engine.html` → `tools/transition-engine/` as a typed, DOM-free
+      `engine.ts` + a React view. Added 11 Vitest cases (voice-leading, inversions,
+      candidate generation, inference, parsing, end-to-end analyze).
+- [x] Render both inside the shell as registered, lazy-loaded pages; production build
+      code-splits each tool (Tone.js stays out of the initial bundle).
+
+> Implemented: both tools are now `@idolmancer/*` workspace packages exporting a light
+> `./manifest` entry (imported eagerly) and a default component (loaded lazily). The
+> shell registry lists both; Tailwind scans `tools/*/src` so their classes are built.
+> The transition engine was **ported, not rewritten** — its pure logic moved into
+> `engine.ts` unchanged in behaviour, with a Tailwind/React view replacing the inline
+> HTML/CSS. The original `transition_engine.html` prototype was removed as superseded.
+>
+> Deferred to Phase 4: actual **Tauri desktop packaging** (needs a Rust toolchain and
+> a Windows target; not buildable from this Linux CI container). The web shell builds
+> end-to-end today and is the same app Tauri will wrap.
 
 ### Phase 2 — Shared foundations
 - [ ] Extract common theory math from chordgen + transition engine into `theory-core`

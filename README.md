@@ -16,7 +16,7 @@ project and imported into the shell to be displayed and organized on its own pag
 - **chordgen** — chord & progression generator (key / scale / genre / mood),
   with playback and MIDI export. _Vite + React + TypeScript + Tailwind, Tone.js._
 - **transition engine** — harmonic voice-leading engine that finds smooth
-  connections between keys and modes. _Currently a standalone HTML prototype._
+  connections between keys and modes. _Typed engine core + React view._
 
 ### Planned
 - **Hertz / Harmonics** — notes & chords → frequencies, with harmonic and
@@ -63,7 +63,7 @@ idolmancer/
 
 ## Repository layout
 
-The monorepo foundation (Phase 0) is in place:
+Monorepo foundation (Phase 0) plus both tools integrated into the shell (Phase 1):
 
 ```
 apps/shell/               # the Idolmancer host app (Vite + React + Tailwind)
@@ -71,9 +71,14 @@ packages/
   tokens/                 # dark-theme Tailwind preset + typed colour tokens
   data-model/             # canonical types + cross-tool selection store
   theory-core/            # pitch/scale/chord/tuning math (unit-tested)
-chordgen/                 # existing tool — integrated into the shell in Phase 1
-transition_engine.html    # existing prototype — ported & integrated in Phase 1
+tools/
+  chordgen/               # chord & progression generator (Tone.js + MIDI export)
+  transition-engine/      # harmonic voice-leading engine (typed core + React view)
 ```
+
+Each tool is a `@idolmancer/*` package exporting a default React component and a
+light `./manifest`. The shell's tool registry (`apps/shell/src/registry.ts`) lists
+them and lazy-loads each component — adding a tool is one entry there.
 
 ### Develop
 
@@ -85,27 +90,21 @@ pnpm dev          # run the shell at http://localhost:5173
 
 pnpm lint         # eslint
 pnpm typecheck    # tsc --noEmit across all packages
-pnpm test         # vitest (theory-core)
-pnpm build        # production build of the shell
+pnpm test         # vitest (theory-core + transition-engine)
+pnpm build        # production build of the shell (code-splits each tool)
 ```
 
 CI runs lint → typecheck → test → build on every push (`.github/workflows/ci.yml`).
-
-### The existing tools (not yet integrated)
-
-- **chordgen** — `cd chordgen && npm install && npm run dev`.
-- **transition engine** — open `transition_engine.html` directly in a browser.
-
-Phase 1 moves chordgen into `tools/chordgen/`, ports the transition engine into
-`tools/transition-engine/`, and registers both in the shell.
 
 ---
 
 ## Status
 
-🚧 Early planning — architecture decided. Idolmancer is **offline-first and
-strictly client-side**: a Tauri shell, a single dark theme, equal-temperament
-tuning (toggleable per tool), wav-file import for analysis (no live capture),
-app-storage persistence, and a shared data model that lets tools pass work
-between each other. The next milestone is scaffolding the monorepo and bringing
-both existing tools into the shell. See [PLAN.md](./PLAN.md) for decisions and roadmap.
+🚧 Phases 0–1 complete: the monorepo foundation is in place and both existing
+tools (chordgen, transition engine) are integrated into the shell as lazy-loaded
+pages. Idolmancer is **offline-first and strictly client-side**: a Tauri shell, a
+single dark theme, equal-temperament tuning (toggleable per tool), wav-file import
+for analysis (no live capture), app-storage persistence, and a shared data model
+that lets tools pass work between each other. Next: Phase 2 — extract shared theory
+math, build the selection store + persistence, and add the harmonics and bpm-ms
+tools. See [PLAN.md](./PLAN.md) for decisions and roadmap.
