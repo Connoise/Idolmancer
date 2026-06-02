@@ -1,0 +1,5 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  # Phase 1 will add tools here:
+  # - 'tools/*'

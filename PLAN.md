@@ -162,11 +162,19 @@ what keeps them independently developable while still interoperable.
 
 ## 4. Phased roadmap
 
-### Phase 0 — Foundation
-- [ ] Package manager = **pnpm**; scaffold monorepo workspaces.
-- [ ] Create `tokens` (dark-theme Tailwind preset), `data-model`, and `theory-core` packages.
-- [ ] Minimal CI: lint → typecheck → test → build (see §5.2).
-- [ ] Stand up an empty `apps/shell` with routing, a nav sidebar, and the tool registry.
+### Phase 0 — Foundation ✅ (complete)
+- [x] Package manager = **pnpm**; scaffold monorepo workspaces.
+- [x] Create `tokens` (dark-theme Tailwind preset), `data-model`, and `theory-core` packages.
+- [x] Minimal CI: lint → typecheck → test → build (see §5.2).
+- [x] Stand up an empty `apps/shell` with routing, a nav sidebar, and the tool registry.
+
+> Implemented: pnpm workspaces (`apps/*`, `packages/*`); `@idolmancer/tokens`
+> (dark Tailwind preset + typed colours), `@idolmancer/data-model` (canonical types +
+> the vanilla `selectionStore`), `@idolmancer/theory-core` (pitch/scale/chord/tuning
+> math with 13 passing Vitest cases); `@idolmancer/shell` (Vite + React + Tailwind,
+> HashRouter, sidebar, lazy-loading tool registry). GitHub Actions runs
+> lint → typecheck → test → build on every push. The `tools/*` workspace glob is
+> commented out until Phase 1 adds the first tool.
 
 ### Phase 1 — Integrate the two existing tools
 - [ ] Move `chordgen/` → `tools/chordgen/`; expose its manifest + default component.

@@ -61,25 +61,43 @@ idolmancer/
 
 ---
 
-## Current repository state
+## Repository layout
 
-This repo is pre-monorepo. Today it contains:
+The monorepo foundation (Phase 0) is in place:
 
 ```
-chordgen/                 # the chordgen tool (Vite app)
-transition_engine.html    # the transition engine prototype (open in a browser)
+apps/shell/               # the Idolmancer host app (Vite + React + Tailwind)
+packages/
+  tokens/                 # dark-theme Tailwind preset + typed colour tokens
+  data-model/             # canonical types + cross-tool selection store
+  theory-core/            # pitch/scale/chord/tuning math (unit-tested)
+chordgen/                 # existing tool — integrated into the shell in Phase 1
+transition_engine.html    # existing prototype — ported & integrated in Phase 1
 ```
 
-### Running the tools today
+### Develop
 
-**chordgen**
+Requires Node ≥ 20 and pnpm 10.
+
 ```bash
-cd chordgen
-npm install
-npm run dev        # http://localhost:5173
+pnpm install
+pnpm dev          # run the shell at http://localhost:5173
+
+pnpm lint         # eslint
+pnpm typecheck    # tsc --noEmit across all packages
+pnpm test         # vitest (theory-core)
+pnpm build        # production build of the shell
 ```
 
-**transition engine** — open `transition_engine.html` directly in a browser.
+CI runs lint → typecheck → test → build on every push (`.github/workflows/ci.yml`).
+
+### The existing tools (not yet integrated)
+
+- **chordgen** — `cd chordgen && npm install && npm run dev`.
+- **transition engine** — open `transition_engine.html` directly in a browser.
+
+Phase 1 moves chordgen into `tools/chordgen/`, ports the transition engine into
+`tools/transition-engine/`, and registers both in the shell.
 
 ---
 
