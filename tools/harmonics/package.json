@@ -1,5 +1,5 @@
 {
-  "name": "@idolmancer/transition-engine",
+  "name": "@idolmancer/harmonics",
   "version": "0.1.0",
   "type": "module",
   "exports": {
@@ -7,8 +7,7 @@
     "./manifest": "./src/manifest.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@idolmancer/data-model": "workspace:*",
@@ -24,7 +23,6 @@
     "@types/react-dom": "^18.3.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "typescript": "^5.7.2"
   }
 }

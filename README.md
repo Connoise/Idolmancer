@@ -71,9 +71,12 @@ packages/
   tokens/                 # dark-theme Tailwind preset + typed colour tokens
   data-model/             # canonical types + cross-tool selection store
   theory-core/            # pitch/scale/chord/tuning math (unit-tested)
+  storage/                # app-storage persistence for the shared selection
 tools/
   chordgen/               # chord & progression generator (Tone.js + MIDI export)
   transition-engine/      # harmonic voice-leading engine (typed core + React view)
+  harmonics/              # note → Hz, harmonic & sub-harmonic series
+  bpm-ms/                 # tempo → milliseconds with subdivisions
 ```
 
 Each tool is a `@idolmancer/*` package exporting a default React component and a
@@ -100,11 +103,13 @@ CI runs lint → typecheck → test → build on every push (`.github/workflows/
 
 ## Status
 
-🚧 Phases 0–1 complete: the monorepo foundation is in place and both existing
-tools (chordgen, transition engine) are integrated into the shell as lazy-loaded
-pages. Idolmancer is **offline-first and strictly client-side**: a Tauri shell, a
-single dark theme, equal-temperament tuning (toggleable per tool), wav-file import
-for analysis (no live capture), app-storage persistence, and a shared data model
-that lets tools pass work between each other. Next: Phase 2 — extract shared theory
-math, build the selection store + persistence, and add the harmonics and bpm-ms
+🚧 Phases 0–2 complete. The monorepo foundation is in place; four tools (chordgen,
+transition engine, harmonics, bpm-ms) are integrated as lazy-loaded pages; shared
+theory math lives in `theory-core`; the cross-tool selection is persisted to app
+storage; and the first association is wired (chordgen publishes its key/scale, which
+the transition engine and harmonics tools can load). Idolmancer is **offline-first
+and strictly client-side**: a Tauri shell, a single dark theme, equal-temperament
+tuning (toggleable where relevant), wav-file import for analysis (no live capture),
+and a shared data model that lets tools pass work between each other. Next: Phase 3 —
+the `audio-engine` (wav decode + offline analysis) and the waveform/spectrum/EQ
 tools. See [PLAN.md](./PLAN.md) for decisions and roadmap.

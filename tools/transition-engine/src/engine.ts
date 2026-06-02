@@ -5,6 +5,11 @@
 // (0–11, enharmonics collapsed); the "spelled layer" lives in the prose fields
 // of each candidate. The React view renders the structured result this returns.
 
+import { pcStep } from '@idolmancer/theory-core';
+
+// Re-exported so the rest of the engine (and the view) keep a single import site.
+export { pcStep };
+
 export const PC_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 export const PC_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 
@@ -78,11 +83,6 @@ export function nameChord(pcs: number[], tonicPc: number): string {
 }
 
 /* ---- voice-leading: minimal total semitone motion between equal-size sets ---- */
-export function pcStep(a: number, b: number): number {
-  const d = Math.abs(a - b) % 12;
-  return Math.min(d, 12 - d);
-}
-
 function perms(a: number[]): number[][] {
   if (a.length <= 1) return [a];
   const o: number[][] = [];

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Play, Square, Volume2, Save, Download, RefreshCw, FileAudio } from 'lucide-react';
 import * as Tone from 'tone';
 import { Midi } from '@tonejs/midi';
+import { selectionStore, type ScaleName } from '@idolmancer/data-model';
 
 const KEYS = ['C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B'] as const;
 const SCALES = ['Major', 'Natural Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian'] as const;
@@ -459,6 +460,15 @@ const MusicTheoryApp = () => {
     // Tone.gainToDb(0) is -Infinity; clamp so the slider mutes cleanly without NaNs.
     synthRef.current.volume.value = volume <= 0 ? -Infinity : Tone.gainToDb(volume);
   }, [volume]);
+
+  // Publish the current key/scale to the shared selection so other tools (e.g. the
+  // transition engine) can pick it up as a starting point.
+  useEffect(() => {
+    const tonic = (KEYS as readonly string[]).indexOf(selectedKey);
+    if (tonic >= 0) {
+      selectionStore.getState().setKeyMode({ tonic, scale: selectedScale as ScaleName });
+    }
+  }, [selectedKey, selectedScale]);
 
   const scaleNotes = useMemo(
     () => getModalScaleNotes(selectedKey, selectedScale),

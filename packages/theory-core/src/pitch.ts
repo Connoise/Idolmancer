@@ -5,6 +5,11 @@ export const PITCH_CLASS_NAMES = [
   'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
 ] as const;
 
+/** Flat spellings of the twelve pitch classes, index = pitch class. */
+export const PITCH_CLASS_NAMES_FLAT = [
+  'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B',
+] as const;
+
 export type PitchClassName = (typeof PITCH_CLASS_NAMES)[number];
 
 const NAME_TO_PITCH_CLASS: Record<string, PitchClass> = {
@@ -44,4 +49,13 @@ export function pitchClassName(pc: PitchClass): PitchClassName {
 /** Convert a pitch class + scientific octave to a MIDI note number (A4 = 69). */
 export function noteToMidi(pitchClass: PitchClass, octave: number): number {
   return (octave + 1) * 12 + normalizePitchClass(pitchClass);
+}
+
+/**
+ * Shortest distance in semitones between two pitch classes around the 12-tone
+ * circle (0–6). The core voice-leading primitive shared across tools.
+ */
+export function pcStep(a: number, b: number): number {
+  const d = Math.abs(a - b) % 12;
+  return Math.min(d, 12 - d);
 }

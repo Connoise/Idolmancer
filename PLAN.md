@@ -195,12 +195,26 @@ what keeps them independently developable while still interoperable.
 > a Windows target; not buildable from this Linux CI container). The web shell builds
 > end-to-end today and is the same app Tauri will wrap.
 
-### Phase 2 — Shared foundations
-- [ ] Extract common theory math from chordgen + transition engine into `theory-core`
-      (incl. the equal-temperament **tuning context** + toggle).
-- [ ] Build the **current-selection store** and `storage` (app-storage persistence).
-- [ ] Wire the first cross-tool association (chordgen progression → transition engine).
-- [ ] Build the `harmonics` and `bpm-ms` tools (light, mostly theory-core + UI).
+### Phase 2 — Shared foundations ✅ (complete)
+- [x] Extract common theory math into `theory-core`: shared `pcStep` primitive (now
+      consumed by the transition engine), a `ScaleName → ChurchMode` adapter (the
+      vocabulary bridge between chordgen and the engine), plus new `frequency` and
+      `tempo` modules used by the two new tools. Equal-temperament tuning context is
+      exposed as a reference-pitch toggle in the harmonics tool.
+- [x] Build the `storage` package (localStorage-backed, Tauri-swappable) and persist
+      the shared selection across reloads (the audio sample is intentionally not
+      persisted). The shell calls `persistSelection()` at startup.
+- [x] Wire the first cross-tool association: chordgen publishes its key/scale to the
+      shared `selectionStore`; the transition engine and harmonics tool offer to load
+      it (engine as its source state, harmonics as its root note).
+- [x] Build the `harmonics` (note → Hz with harmonic/sub-harmonic series, cents, and
+      reference-pitch toggle) and `bpm-ms` (tempo → ms with dotted/triplet
+      subdivisions) tools. theory-core gained 8 more Vitest cases; storage added 2.
+
+> Notes: chordgen's own internal theory tables were left in place — it is a large
+> standalone monolith, and the high-value, low-risk extraction was the shared
+> `pcStep` + the scale/mode adapter that actually enables interop. Deeper chordgen
+> dedup can follow when a second tool needs the same tables.
 
 ### Phase 3 — Analysis tools (offline, wav-based)
 - [ ] `audio-engine`: wav import/decode + offline FFT/feature extraction (no real-time).

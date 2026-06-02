@@ -16,3 +16,21 @@ export const SCALE_PATTERNS: Record<ScaleName, readonly number[]> = {
 export function scalePitchClasses(tonic: PitchClass, scale: ScaleName): PitchClass[] {
   return SCALE_PATTERNS[scale].map((offset) => normalizePitchClass(tonic + offset));
 }
+
+/** The seven Greek/church mode names, as used by the transition engine. */
+export type ChurchMode = 'Ionian' | 'Dorian' | 'Phrygian' | 'Lydian' | 'Mixolydian' | 'Aeolian' | 'Locrian';
+
+/**
+ * Maps the canonical `ScaleName` vocabulary onto church-mode names. This is the
+ * adapter that lets tools interoperate: chordgen publishes a `KeyMode` using
+ * `ScaleName`, and the transition engine consumes it in its own mode vocabulary.
+ */
+export const SCALE_TO_CHURCH_MODE: Record<ScaleName, ChurchMode> = {
+  Major: 'Ionian',
+  'Natural Minor': 'Aeolian',
+  Dorian: 'Dorian',
+  Phrygian: 'Phrygian',
+  Lydian: 'Lydian',
+  Mixolydian: 'Mixolydian',
+  Locrian: 'Locrian',
+};

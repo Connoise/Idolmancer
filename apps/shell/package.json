@@ -10,8 +10,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@idolmancer/bpm-ms": "workspace:*",
     "@idolmancer/chordgen": "workspace:*",
     "@idolmancer/data-model": "workspace:*",
+    "@idolmancer/harmonics": "workspace:*",
+    "@idolmancer/storage": "workspace:*",
     "@idolmancer/theory-core": "workspace:*",
     "@idolmancer/tokens": "workspace:*",
     "@idolmancer/transition-engine": "workspace:*",

@@ -2,6 +2,8 @@ import type { ComponentType } from 'react';
 import type { ToolManifest } from '@idolmancer/data-model';
 import { manifest as chordgen } from '@idolmancer/chordgen/manifest';
 import { manifest as transitionEngine } from '@idolmancer/transition-engine/manifest';
+import { manifest as harmonics } from '@idolmancer/harmonics/manifest';
+import { manifest as bpmMs } from '@idolmancer/bpm-ms/manifest';
 
 /**
  * A registered tool: its framework-agnostic manifest plus a lazy loader for its
@@ -21,6 +23,8 @@ export interface ToolRegistryEntry {
 export const tools: ToolRegistryEntry[] = [
   { manifest: chordgen, load: () => import('@idolmancer/chordgen') },
   { manifest: transitionEngine, load: () => import('@idolmancer/transition-engine') },
+  { manifest: harmonics, load: () => import('@idolmancer/harmonics') },
+  { manifest: bpmMs, load: () => import('@idolmancer/bpm-ms') },
 ];
 
 export function findTool(id: string | undefined): ToolRegistryEntry | undefined {

@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useStore } from 'zustand';
+import { selectionStore } from '@idolmancer/data-model';
+import { SCALE_TO_CHURCH_MODE } from '@idolmancer/theory-core';
 import {
   analyze,
   MODE_ORDER,
@@ -223,6 +226,13 @@ export default function TransitionEngine() {
 
   const sp = speller(targetTonic);
 
+  // Cross-tool association: pick up the key/scale chordgen published to the shared
+  // selection and offer to load it as the source state.
+  const sharedKeyMode = useStore(selectionStore, (s) => s.selection.keyMode);
+  const sharedMode = sharedKeyMode ? SCALE_TO_CHURCH_MODE[sharedKeyMode.scale] : null;
+  const sharedMatchesSource =
+    sharedKeyMode != null && sharedKeyMode.tonic === sourceTonic && sharedMode === sourceMode;
+
   return (
     <div className="mx-auto max-w-5xl">
       <h1 className="font-serif text-3xl font-light">
@@ -232,6 +242,19 @@ export default function TransitionEngine() {
         Set a source and target state, drop in a melody fragment, and tune the four weights. The engine enumerates
         connectors in relative-interval space, scores them on structural metrics, and re-sorts live.
       </p>
+
+      {sharedKeyMode && sharedMode && !sharedMatchesSource && (
+        <button
+          onClick={() => {
+            setSourceTonic(sharedKeyMode.tonic);
+            setSourceMode(sharedMode);
+            setInferFromMelody(false);
+          }}
+          className="mt-4 rounded border border-accent/50 bg-accent/10 px-3 py-1.5 text-sm text-accent hover:bg-accent/20"
+        >
+          Load from chordgen: use {PC_SHARP[sharedKeyMode.tonic]} {sharedMode} as source
+        </button>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* States & melody */}

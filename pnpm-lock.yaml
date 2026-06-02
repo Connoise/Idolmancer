@@ -23,12 +23,21 @@ importers:
 
   apps/shell:
     dependencies:
+      '@idolmancer/bpm-ms':
+        specifier: workspace:*
+        version: link:../../tools/bpm-ms
       '@idolmancer/chordgen':
         specifier: workspace:*
         version: link:../../tools/chordgen
       '@idolmancer/data-model':
         specifier: workspace:*
         version: link:../../packages/data-model
+      '@idolmancer/harmonics':
+        specifier: workspace:*
+        version: link:../../tools/harmonics
+      '@idolmancer/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@idolmancer/theory-core':
         specifier: workspace:*
         version: link:../../packages/theory-core
@@ -89,6 +98,19 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  packages/storage:
+    dependencies:
+      '@idolmancer/data-model':
+        specifier: workspace:*
+        version: link:../data-model
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9
+
   packages/theory-core:
     dependencies:
       '@idolmancer/data-model':
@@ -104,6 +126,31 @@ importers:
 
   packages/tokens:
     devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  tools/bpm-ms:
+    dependencies:
+      '@idolmancer/data-model':
+        specifier: workspace:*
+        version: link:../../packages/data-model
+      '@idolmancer/theory-core':
+        specifier: workspace:*
+        version: link:../../packages/theory-core
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.30
+      '@types/react-dom':
+        specifier: ^18.3.1
+        version: 18.3.7(@types/react@18.3.30)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
@@ -139,11 +186,45 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  tools/harmonics:
+    dependencies:
+      '@idolmancer/data-model':
+        specifier: workspace:*
+        version: link:../../packages/data-model
+      '@idolmancer/theory-core':
+        specifier: workspace:*
+        version: link:../../packages/theory-core
+      zustand:
+        specifier: ^5.0.2
+        version: 5.0.14(@types/react@18.3.30)(react@18.3.1)
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.30
+      '@types/react-dom':
+        specifier: ^18.3.1
+        version: 18.3.7(@types/react@18.3.30)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   tools/transition-engine:
     dependencies:
       '@idolmancer/data-model':
         specifier: workspace:*
         version: link:../../packages/data-model
+      '@idolmancer/theory-core':
+        specifier: workspace:*
+        version: link:../../packages/theory-core
+      zustand:
+        specifier: ^5.0.2
+        version: 5.0.14(@types/react@18.3.30)(react@18.3.1)
     devDependencies:
       '@types/react':
         specifier: ^18.3.12
