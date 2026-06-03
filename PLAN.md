@@ -231,9 +231,25 @@ what keeps them independently developable while still interoperable.
 > ask directly: it filters the loaded wav offline and overlays the original vs
 > filtered spectrum beneath the response curve.
 
-### Phase 4 — Desktop polish
-- [ ] Presets, richer cross-tool data flow, settings (tuning toggle, theme).
-- [ ] Tauri packaging for Windows 11 (informal distribution — no store/signing).
+### Phase 4 — Desktop polish 🟡 (in-app work complete; Tauri build pending Windows)
+- [x] App-wide **settings** in a persisted `settingsStore`: equal-temperament
+      reference pitch (consumed by the harmonics tool) and a theme slot (single dark
+      for now). A Settings page is reachable from the shell header.
+- [x] **Presets**: save/load/delete named snapshots of the shared selection
+      (key/chord/progression/tempo, never the sample), persisted to app storage and
+      surfaced via a `PresetBar` in the shell header.
+- [x] **Richer cross-tool data flow**: added `tempoBpm` to the selection — chordgen
+      publishes its tempo and the bpm-ms tool is now driven by that shared value
+      (changes flow both ways). Selection + settings both survive a reload.
+- [x] **Tauri scaffold** (`src-tauri/`): valid v2 `tauri.conf.json` pointing at the
+      shell's dev server / `dist`, `Cargo.toml`, `build.rs`, `main.rs`, and a root
+      `pnpm tauri` script. Ready to build.
+- [ ] **Run the Tauri build on Windows.** Requires a Rust toolchain + WebView2 and
+      generated icons (`pnpm tauri icon …`); not buildable from this Linux container.
+
+> Everything except the final native packaging is done and verified in the web build.
+> The Tauri step is a Windows-machine task by nature — the scaffold is in place so it
+> is `pnpm tauri build` away once Rust is installed and icons are generated.
 
 ### Phase 5 — Android (later, full parity)
 - [ ] Tauri mobile build; touch/responsive passes targeting **full feature parity**.

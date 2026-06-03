@@ -1,11 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { persistSelection } from '@idolmancer/storage';
+import { persistSelection, persistSettings } from '@idolmancer/storage';
 import App from './App';
 import './index.css';
 
-// Hydrate the shared selection from app storage and keep it persisted.
+// Hydrate the shared selection and settings from app storage and keep them persisted.
 persistSelection();
+persistSettings();
 
 const container = document.getElementById('root');
 if (!container) {

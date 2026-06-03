@@ -1,10 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useStore } from 'zustand';
+import { selectionStore } from '@idolmancer/data-model';
 import { bpmToHz, quarterNoteMs, subdivisionTable } from '@idolmancer/theory-core';
 
 const fmt = (ms: number) => (ms >= 100 ? ms.toFixed(1) : ms.toFixed(2));
 
 export default function BpmMs() {
-  const [bpm, setBpm] = useState(120);
+  // Tempo is shared: chordgen publishes its BPM here, and changes made here flow back.
+  const bpm = useStore(selectionStore, (s) => s.selection.tempoBpm) ?? 120;
+  const setBpm = (n: number) => selectionStore.getState().setTempo(Math.max(1, n || 1));
 
   const table = useMemo(() => subdivisionTable(bpm), [bpm]);
   const quarter = useMemo(() => quarterNoteMs(bpm), [bpm]);
@@ -24,7 +28,7 @@ export default function BpmMs() {
             min={20}
             max={400}
             value={bpm}
-            onChange={(e) => setBpm(Math.max(1, Number(e.target.value) || 1))}
+            onChange={(e) => setBpm(Number(e.target.value))}
             className="w-28 rounded border border-border bg-bg px-3 py-2 font-mono text-lg text-accent outline-none focus:border-accent"
           />
         </div>

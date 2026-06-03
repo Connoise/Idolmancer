@@ -11,7 +11,8 @@
     "build": "pnpm --filter @idolmancer/shell run build",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "tauri": "pnpm dlx @tauri-apps/cli@^2"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

@@ -461,14 +461,18 @@ const MusicTheoryApp = () => {
     synthRef.current.volume.value = volume <= 0 ? -Infinity : Tone.gainToDb(volume);
   }, [volume]);
 
-  // Publish the current key/scale to the shared selection so other tools (e.g. the
-  // transition engine) can pick it up as a starting point.
+  // Publish the current key/scale and tempo to the shared selection so other tools
+  // (the transition engine, harmonics, bpm-ms) can pick them up as a starting point.
   useEffect(() => {
     const tonic = (KEYS as readonly string[]).indexOf(selectedKey);
     if (tonic >= 0) {
       selectionStore.getState().setKeyMode({ tonic, scale: selectedScale as ScaleName });
     }
   }, [selectedKey, selectedScale]);
+
+  useEffect(() => {
+    selectionStore.getState().setTempo(bpm);
+  }, [bpm]);
 
   const scaleNotes = useMemo(
     () => getModalScaleNotes(selectedKey, selectedScale),

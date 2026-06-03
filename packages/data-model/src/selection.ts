@@ -12,6 +12,8 @@ export interface Selection {
   chord?: Chord;
   progression?: Progression;
   sample?: AudioSample;
+  /** Tempo in BPM, shared between chordgen and the bpm-ms tool. */
+  tempoBpm?: number;
 }
 
 export interface SelectionState {
@@ -20,6 +22,7 @@ export interface SelectionState {
   setChord: (chord: Chord) => void;
   setProgression: (progression: Progression) => void;
   setSample: (sample: AudioSample) => void;
+  setTempo: (tempoBpm: number) => void;
   reset: () => void;
 }
 
@@ -34,5 +37,6 @@ export const selectionStore = createStore<SelectionState>((set) => ({
   setProgression: (progression) =>
     set((state) => ({ selection: { ...state.selection, progression } })),
   setSample: (sample) => set((state) => ({ selection: { ...state.selection, sample } })),
+  setTempo: (tempoBpm) => set((state) => ({ selection: { ...state.selection, tempoBpm } })),
   reset: () => set({ selection: {} }),
 }));

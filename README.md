@@ -108,13 +108,26 @@ CI runs lint → typecheck → test → build on every push (`.github/workflows/
 
 ## Status
 
-🚧 Phases 0–3 complete. The monorepo hosts **seven tools** as lazy-loaded pages —
-chordgen, transition engine, harmonics, bpm-ms, waveform, spectrum, and EQ preview.
+🚧 Phases 0–4 (in-app) complete. The monorepo hosts **seven tools** as lazy-loaded
+pages — chordgen, transition engine, harmonics, bpm-ms, waveform, spectrum, and EQ
+preview — plus app-wide **settings** (persisted tuning reference + theme) and
+**presets** (named snapshots of the shared selection) reachable from the header.
 Shared theory math lives in `theory-core` and offline DSP (WAV decode, FFT, biquad
-EQ) in `audio-engine`; the cross-tool selection is persisted to app storage; wav
-files imported via the shared `WavImport` control are read by every analysis tool.
-Idolmancer is **offline-first and strictly client-side**: a Tauri shell, a single
-dark theme, equal-temperament tuning (toggleable where relevant), wav-file import for
-analysis (no live capture), and a shared data model that lets tools pass work between
-each other. Next: Phase 4 — desktop polish (presets, settings, Tauri packaging). See
+EQ) in `audio-engine`; the shared selection and settings persist to app storage; wav
+files imported via `WavImport` are read by every analysis tool; chordgen publishes its
+key/scale/tempo, which the transition engine, harmonics, and bpm-ms tools pick up.
+Idolmancer is **offline-first and strictly client-side**. A Tauri v2 scaffold lives in
+`src-tauri/`, ready to package on Windows (`pnpm tauri build`, needs Rust + icons).
+Remaining: run the Tauri build on Windows, then Phase 5 (Android). See
 [PLAN.md](./PLAN.md) for decisions and roadmap.
+
+### Packaging (desktop)
+
+The app is a normal web build wrapped by Tauri. On a Windows machine with the
+[Tauri v2 prerequisites](https://v2.tauri.app/start/prerequisites/) (Rust + WebView2):
+
+```bash
+pnpm install
+pnpm tauri icon path/to/logo.png   # generate icons once
+pnpm tauri build                   # produces a Windows installer
+```

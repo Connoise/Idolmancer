@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from 'zustand';
-import { selectionStore } from '@idolmancer/data-model';
+import { selectionStore, settingsStore } from '@idolmancer/data-model';
 import {
   harmonicSeries,
   nearestNote,
@@ -65,8 +65,10 @@ function SeriesTable({
 export default function Harmonics() {
   const [pitchClass, setPitchClass] = useState(9); // A
   const [octave, setOctave] = useState(3);
-  const [referenceA4, setReferenceA4] = useState<number>(440);
 
+  // Reference pitch is an app-wide setting (changing it here changes it everywhere).
+  const referenceA4 = useStore(settingsStore, (s) => s.settings.referenceA4);
+  const setReferenceA4 = settingsStore.getState().setReferenceA4;
   const sharedKeyMode = useStore(selectionStore, (s) => s.selection.keyMode);
 
   const fundamental = useMemo(

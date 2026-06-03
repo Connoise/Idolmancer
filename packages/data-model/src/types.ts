@@ -44,6 +44,15 @@ export interface Progression {
   chords: Chord[];
 }
 
+export type ThemeName = 'dark';
+
+/** App-wide settings, persisted across sessions. */
+export interface Settings {
+  /** Equal-temperament reference pitch (A4) in Hz. */
+  referenceA4: number;
+  theme: ThemeName;
+}
+
 /**
  * Tuning context. Equal temperament is fixed for now; tools that care about
  * absolute frequency can read the reference pitch and may expose a toggle.

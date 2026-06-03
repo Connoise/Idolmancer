@@ -20,6 +20,7 @@
     "@idolmancer/theory-core": "workspace:*",
     "@idolmancer/tokens": "workspace:*",
     "@idolmancer/transition-engine": "workspace:*",
+    "@idolmancer/ui": "workspace:*",
     "@idolmancer/waveform": "workspace:*",
     "lucide-react": "^0.460.0",
     "react": "^18.3.1",
